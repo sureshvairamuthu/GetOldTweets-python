@@ -127,6 +127,7 @@ class TweetManager:
 		opener.addheaders = headers
 
 		try:
+			print('url :', url)
 			response = opener.open(url)
 			jsonResponse = response.read()
 		except:
