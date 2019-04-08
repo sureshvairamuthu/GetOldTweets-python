@@ -1,6 +1,7 @@
 import urllib,urllib2,json,re,datetime,sys,cookielib
 from .. import models
 from pyquery import PyQuery
+import requests as rq
 
 class TweetManager:
 	
@@ -37,7 +38,9 @@ class TweetManager:
 			for tweetHTML in tweets:
 				tweetPQ = PyQuery(tweetHTML)
 				tweet = models.Tweet()
-				
+
+				# print(tweetPQ("a.js-geo-pivot-link").attr("data-place-id"))
+				# print(tweetPQ)#.attr("span.permalink-tweet-geo-text"))#.attr("data-place-id"))
 				usernameTweet = tweetPQ("span:first.username.u-dir b").text()
 				txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text().replace('# ', '#').replace('@ ', '@'))
 				retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
@@ -45,11 +48,15 @@ class TweetManager:
 				dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
 				id = tweetPQ.attr("data-tweet-id")
 				permalink = tweetPQ.attr("data-permalink-path")
+				resp = rq.get('https://twitter.com' + permalink)
+				doc = PyQuery(resp.content)
+				# print(doc('a.js-geo-pivot-link').text())
+
 				
-				geo = ''
-				geoSpan = tweetPQ('span.Tweet-geo')
-				if len(geoSpan) > 0:
-					geo = geoSpan.attr('title')
+				geo = doc('a.js-geo-pivot-link').text().replace(',','-')
+				# geoSpan = tweetPQ('span.Tweet-geo')
+				# if len(geoSpan) > 0:
+				# 	geo = geoSpan.attr('title')
 				
 				tweet.id = id
 				tweet.permalink = 'https://twitter.com' + permalink
@@ -59,8 +66,9 @@ class TweetManager:
 				tweet.retweets = retweets
 				tweet.favorites = favorites
 				tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
-				tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
-				tweet.geo = geo
+				tweet.hashtags = " ".join(re.compile('(#\\*)').findall(tweet.text))
+				tweet.geo = geo if geo else "None"
+
 				
 				results.append(tweet)
 				resultsAux.append(tweet)
@@ -106,7 +114,9 @@ class TweetManager:
 				url = "https://twitter.com/i/search/timeline?q=%s&src=typd&max_position=%s"
 		
 		
+		
 		url = url % (urllib.quote(urlGetData), urllib.quote(refreshCursor))
+		print(url)
 
 		headers = [
 			('Host', "twitter.com"),

@@ -35,7 +35,10 @@ def main(argv):
 				tweetCriteria.until = arg
 
 			elif opt == '--querysearch':
-				tweetCriteria.querySearch = arg
+				print(type(arg))
+				searchquery =arg.replace(" "," OR ")
+				tweetCriteria.querySearch = searchquery
+				print(tweetCriteria.querySearch)
 
 			elif opt == '--toptweets':
 				tweetCriteria.topTweets = True
